@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import io
 import logging
+from typing import Dict, Type
 from PIL import Image
 import PyPDF2
 import pytesseract
@@ -62,3 +63,22 @@ class PdfParser(BaseParser):
         except Exception as e:
             logging.error(f"OCR processing error: {e}")
             return "Error in OCR processing"
+
+# Parser factory with registration system
+class ParserFactory:
+    _parsers: Dict[str, Type[BaseParser]] = {}
+
+    @classmethod
+    def register_parser(cls, extension: str, parser: Type[BaseParser]) -> None:
+        cls._parsers[extension] = parser
+
+    @classmethod
+    def get_parser(cls, extension: str) -> BaseParser:
+        parser = cls._parsers.get(extension)
+        if not parser:
+            raise ValueError(f"No parser found for extension: {extension}")
+        return parser()
+
+
+ParserFactory.register_parser('txt', TxtParser)
+ParserFactory.register_parser('pdf', PdfParser)
