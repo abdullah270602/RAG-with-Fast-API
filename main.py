@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException
 import os
 from dotenv import load_dotenv
 import groq
@@ -61,3 +61,17 @@ async def ask_question(question: Question):
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/upload/")
+async def upload_file(file: UploadFile = File(...)):
+    FOLDER = "sources"
+    
+    os.makedirs(FOLDER, exist_ok=True)
+    file_path = os.path.join(FOLDER, file.filename)
+    
+    with open(file_path, "wb") as f:
+        f.write(await file.read())
+    
+    
+    return {"info": "File uploaded successfully!", "filename": file.filename}
