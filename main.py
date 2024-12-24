@@ -65,13 +65,24 @@ async def ask_question(question: Question):
 
 @app.post("/upload/")
 async def upload_file(file: UploadFile = File(...)):
+    ALLOWED_EXTENSIONS = {"txt", "pdf", "docx"}
+    
+    file_type = file.filename.split(".")[-1]
+    if file_type not in ALLOWED_EXTENSIONS:
+        raise HTTPException(status_code=400, detail="File type not allowed.")
+    
     FOLDER = "sources"
+    try :
     
-    os.makedirs(FOLDER, exist_ok=True)
-    file_path = os.path.join(FOLDER, file.filename)
+        os.makedirs(FOLDER, exist_ok=True)
+        file_path = os.path.join(FOLDER, file.filename)
+        
+        with open(file_path, "wb") as f:
+            f.write(await file.read())
+        
+        
+        return {"info": "File uploaded successfully!", "filename": file.filename}
     
-    with open(file_path, "wb") as f:
-        f.write(await file.read())
-    
-    
-    return {"info": "File uploaded successfully!", "filename": file.filename}
+    except Exception as e:
+        print(f"Error saving file: {e}")
+        raise HTTPException(status_code=500, detail="Error saving file.")
